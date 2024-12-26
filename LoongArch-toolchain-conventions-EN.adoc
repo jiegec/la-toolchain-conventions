@@ -81,19 +81,19 @@ as more LoongArch features are developed and implemented.
 |Note
 
 |-march=
-|`native` `la64v1.0` `la64v1.1` `loongarch64` `la464` `la664`
+|`native` `la64v1.0` `la64v1.1` `loongarch32` `loongarch64` `la464` `la664`
 |Select the target architecture, i.e.
 the basic collection of enabled <<feature-subsets,ISA feature subsets>>.
 |
 
 |-mtune=
-|`native` `generic` `loongarch64` `la464` `la664`
+|`native` `generic` `loongarch32` `loongarch64` `la464` `la664`
 |Select the target microarchitecture, default to the value of `-march=`
 or `generic` if that is not possible.
 |
 
 |-mabi=
-|`lp64d` `lp64f` `lp64s` `ilp32d` `ilp32f` `ilp32s`
+|`ilp32d` `ilp32f` `ilp32s` `lp64d` `lp64f` `lp64s`
 |Select the base ABI type.
 |
 
@@ -262,9 +262,14 @@ options, the compiler may abort.
 |Symbol
 |Description
 
+|LoongArch32 base architecture
+|`la32`
+|32-bit ISA defined in __LoongArch Reference Manual - Volume 1: Basic Architecture__ v1.00.
+
 |LoongArch64 base architecture
 |`la64`
-|ISA defined in __LoongArch Reference Manual - Volume 1: Basic Architecture__ v1.00.
+|64-bit ISA defined in __LoongArch Reference Manual - Volume 1: Basic Architecture__ v1.00.
+
 |===
 
 The following table lists all ISA extensions that should be abstracted by the compiler
@@ -326,6 +331,10 @@ for. These are valid parameters to either `-march=` or `-mtune=`.
 |auto-detected +
 (native compilers only)
 |auto-detected microarchitecture model / features
+
+|`loongarch32`
+|`la32` [`fpu64`]
+|Generic LoongArch 32-bit (LA32) processors
 
 |`loongarch64`
 |`la64` [`fpu64`]
@@ -393,12 +402,12 @@ implemented target ISA variants.
 |===
 |Standard name  |Data model
 |Bit-width of argument / return value GPRs / FPRs
-|`lp64d`        |LP64       |64 / 64
-|`lp64f`        |LP64       |64 / 32
-|`lp64s`        |LP64       |64 / (none)
 |`ilp32d`       |ILP32      |32 / 64
 |`ilp32f`       |ILP32      |32 / 32
 |`ilp32s`       |ILP32      |32 / (none)
+|`lp64d`        |LP64       |64 / 64
+|`lp64f`        |LP64       |64 / 32
+|`lp64s`        |LP64       |64 / (none)
 |===
 
 The following table lists all ABI extension types and
@@ -462,6 +471,18 @@ following table, as long as they are not explicitly disabled or excluded from us
 |ABI extension type
 |Minimal required ISA feature subsets
 
+|`ilp32d`
+|`base`
+|`la32` [`fpu64`]
+
+|`ilp32f`
+|`base`
+|`la32` [`fpu32`]
+
+|`ilp32s`
+|`base`
+|`la32` [`fpunone`]
+
 |`lp64d`
 |`base`
 |`la64` [`fpu64`]
@@ -473,6 +494,7 @@ following table, as long as they are not explicitly disabled or excluded from us
 |`lp64s`
 |`base`
 |`la64` [`fpunone`]
+
 |===
 
 == GNU Target Triplets and Multiarch Specifiers
@@ -497,11 +519,11 @@ for the GNU triplets of LoongArch:
 |`machine`
 |Description
 
-|`loongarch64`
-|LA64 base architecture (implies `lp64*` ABI)
-
 |`loongarch32`
 |LA32 base architecture (implies `ilp32*` ABI)
+
+|`loongarch64`
+|LA64 base architecture (implies `lp64*` ABI)
 |===
 
 As standard library directory names, the canonical multiarch architecture specifiers
@@ -517,9 +539,9 @@ specifier, respectively.
 [%header,cols="^1,^2"]
 |===
 |`<fabi-suffix>` |Description
-|(empty string)  |The base ABI uses 64-bit FPRs for parameter passing. (`lp64d`)
-|`f32`           |The base ABI uses 32-bit FPRs for parameter passing. (`lp64f`)
-|`sf`            |The base ABI uses no FPR for parameter passing. (`lp64s`)
+|(empty string)  |The base ABI uses 64-bit FPRs for parameter passing. (`lp64d` `ilp32d`)
+|`f32`           |The base ABI uses 32-bit FPRs for parameter passing. (`lp64f` `ilp32f`)
+|`sf`            |The base ABI uses no FPR for parameter passing. (`lp64s` `ilp32s`)
 |===
 
 .List of possible `<abiext-suffix>`
@@ -536,6 +558,30 @@ specifier, respectively.
 (Base ABI / ABI extension)
 |C Library | Kernel
 |Multiarch specifier
+
+|`ilp32d` / `base`
+| glibc | Linux
+|`loongarch32-linux-gnu`
+
+|`ilp32f` / `base`
+| glibc | Linux
+|`loongarch32-linux-gnuf32`
+
+|`ilp32s` / `base`
+| glibc | Linux
+|`loongarch32-linux-gnusf`
+
+|`ilp32d` / `base`
+| musl libc | Linux
+|`loongarch32-linux-musl`
+
+|`ilp32f` / `base`
+| musl libc | Linux
+|`loongarch32-linux-muslf32`
+
+|`ilp32s` / `base`
+| musl libc | Linux
+|`loongarch32-linux-muslsf`
 
 |`lp64d` / `base`
 | glibc | Linux
@@ -560,6 +606,7 @@ specifier, respectively.
 |`lp64s` / `base`
 | musl libc | Linux
 |`loongarch64-linux-muslsf`
+
 |===
 
 == C/C++ Preprocessor Built-in Macro Definitions
@@ -576,7 +623,7 @@ specifier, respectively.
 |Defined if the target is LoongArch.
 
 |`__loongarch_grlen`
-|`64`
+|`32` `64`
 |Bit-width of general purpose registers.
 
 |`__loongarch_frlen`
@@ -584,17 +631,21 @@ specifier, respectively.
 |Bit-width of floating-point registers (`0` if there is no FPU).
 
 |`__loongarch_arch`
-|`"loongarch64"` `"la464"` `"la664"` `"la64v1.0"` `"la64v1.1"`
+|`"loongarch32"` `"loongarch64"` `"la464"` `"la664"` `"la64v1.0"` `"la64v1.1"`
 |Target ISA preset as specified by `-march=`.
 If `-march=` is not present, an implementation-defined default value should be
 used. If `-march=native` is enabled (user-specified or the default value),
 the result is automatically detected by the compiler.
 
 |`__loongarch_tune`
-|`"generic"` `"loongarch64"` `"la464"` `"la664"`
+|`"generic"` `"loongarch32"` `"loongarch64"` `"la464"` `"la664"`
 |Processor model as specified by `-mtune` or its default value.
 If `-mtune=native` is enabled (either explicitly given or set with
 `-march=native`), the result is automatically detected by the compiler.
+
+|`__loongarch_ilp32`
+|`1` or undefined
+|Defined if ABI uses the ILP32 data model and 32-bit GPRs for parameter passing.
 
 |`__loongarch_lp64`
 |`1` or undefined
@@ -675,6 +726,9 @@ code that need to differentiate between ABIs in an architecture-agnostic manner.
 |`\\__FLOAT_WORD_ORDER__`
 |Byte order for floating-point data
 
+|`\\__ILP32__` `_ILP32`
+|Whether the ABI passes arguments in 32-bit GPRs and uses the `ILP32` data model
+
 |`\\__LP64__` `_LP64`
 |Whether the ABI passes arguments in 64-bit GPRs and uses the `LP64` data model
 
@@ -728,6 +782,10 @@ and a conforming compiler may choose to implement none or all them.
 |Name
 |Equivalent to
 |Description
+
+|`__loongarch32`
+|`__loongarch_grlen == 32`
+|Defined iff `__loongarch_grlen == 32`.
 
 |`__loongarch64`
 |`__loongarch_grlen == 64`
